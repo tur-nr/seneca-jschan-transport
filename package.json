@@ -1,7 +1,7 @@
 {
   "name": "seneca-jschan-transport",
   "version": "0.0.1",
-  "description": "jsChan transport plugin for Seneca",
+  "description": "jschan transport plugin for Seneca",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,6 +14,10 @@
   ],
   "author": "Christopher Turner <turner296@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:tur-nr/seneca-jschan-transport.git"
+  },
   "devDependencies": {
     "seneca": "^0.5.20"
   },
