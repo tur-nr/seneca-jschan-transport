@@ -2,6 +2,7 @@ var SPDY_PORT = 9323
   , WS_PORT = 3000
   , _ = require('underscore')
   , jschan = require('jschan')
+  , clean = require('clean-obj')
   , plugin = 'jschan-transport'
   , isBrowser;
 
@@ -53,9 +54,14 @@ module.exports = exports = function transport(config) {
     function onData(data) {
       trans.handle_request(seneca, data, opts, function handleRequest(response) {
         if (response == null) return;
-
         // give response back to client
-        data.response.write(response);
+
+        // we need to clean the response result, jschan's underlying msgpack
+        // can not encode undefined values. this will stop any values coming
+        // through and causing an internal exception
+        clean(response.res);
+
+        data.response.end(response);
       });
     }
 
@@ -95,8 +101,7 @@ module.exports = exports = function transport(config) {
 
     function makeSend(spec, topic, done) {
       var session
-        , sender
-        , response;
+        , sender;
 
       // channel protocol
       // browser = websocket, node = spdy
@@ -104,22 +109,28 @@ module.exports = exports = function transport(config) {
         ? jschan.websocketClientSession(/* todo: compose ws://host */)
         : jschan.spdyClientSession({ port: opts.port || SPDY_PORT });
 
-      // sender and response channels
+      // sender channel
       sender = session.WriteChannel();
-      response = sender.ReadChannel();
 
       log.debug('client', 'session', topic + '_res', opts, seneca);
 
-      // handle response channel
-      response.on('data', function onResponse(response) {
-        trans.handle_response(seneca, response, opts);
-      });
-
       done(null, function send(args, done) {
-        var data = trans.prepare_request(this, args, done);
+        var response
+          , data;
+
+        // response channel
+        response = sender.ReadChannel();
+
+        // handle response channel
+        response.on('data', function onResponse(response) {
+          trans.handle_response(seneca, response, opts);
+        });
+
+        data = trans.prepare_request(this, clean(args), done);
         data.response = response; // gives the channel a writable response
+        
         // transport ...woooosh!!
-        sender.write(data);
+        var res = sender.write(data);
       });
 
       // seneca cleanup

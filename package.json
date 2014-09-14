@@ -22,6 +22,7 @@
     "seneca": "^0.5.20"
   },
   "dependencies": {
+    "clean-obj": "^0.1.1",
     "jschan": "^0.1.4",
     "underscore": "^1.7.0"
   }
