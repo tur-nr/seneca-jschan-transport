@@ -114,7 +114,7 @@ module.exports = exports = function transport(config) {
       // browser = websocket, node = spdy
       session = (isBrowser)
         ? jschan.websocketClientSession(/* todo: compose ws://host */)
-        : jschan.spdyClientSession({ port: opts.port });
+        : jschan.spdyClientSession({ host: opts.host, port: opts.port });
 
       // sender channel
       sender = session.WriteChannel();
