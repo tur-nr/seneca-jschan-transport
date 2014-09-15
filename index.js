@@ -18,12 +18,22 @@ module.exports = exports = function transport(config) {
     , log = seneca.log
     , options = seneca.options()
     , timeout
-    , trans;
+    , trans
+    , port;
 
   // transport timeout
   timeout = (options.timeout)
     ? options.timeout - 555
     : 22222;
+
+  // given port
+  if (config.port) {
+    port = config.port;
+  } else {
+    port = (isBrowser)
+      ? WS_PORT
+      : SPDY_PORT;
+  }
 
   trans = seneca.export('transport/utils');
 
@@ -31,7 +41,8 @@ module.exports = exports = function transport(config) {
   config = util.deepextend({
     jschan: {
       type: 'jschan',
-      timeout: timeout
+      timeout: timeout,
+      port: port
     }
   }, options.transport, config);
 
@@ -77,11 +88,7 @@ module.exports = exports = function transport(config) {
       log.debug('listen', 'session', topic + '_act', opts, seneca);
 
       // listen to topic
-      if (isBrowser) {
-        server.listen(opts.port || WS_PORT);
-      } else {
-        server.listen(opts.port || SPDY_PORT);
-      }
+      server.listen(opts.port);
     });
 
     // close the server when seneca closes
@@ -107,7 +114,7 @@ module.exports = exports = function transport(config) {
       // browser = websocket, node = spdy
       session = (isBrowser)
         ? jschan.websocketClientSession(/* todo: compose ws://host */)
-        : jschan.spdyClientSession({ port: opts.port || SPDY_PORT });
+        : jschan.spdyClientSession({ port: opts.port });
 
       // sender channel
       sender = session.WriteChannel();
